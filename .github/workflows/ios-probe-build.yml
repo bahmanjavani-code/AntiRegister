@@ -1,0 +1,26 @@
+name: iOS probe build
+on:
+  workflow_dispatch:
+  push:
+    branches: [ios-bridge]
+    paths: ['ios-bridge/**', '.github/workflows/ios-probe-build.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - working-directory: ios-bridge
+        run: |
+          xcodegen generate
+          xcodebuild -project AntiRegisterProbe.xcodeproj -scheme AntiRegisterProbe -configuration Release -sdk iphoneos -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/AntiRegisterProbe.app Payload/
+          zip -qr AntiRegisterProbe-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AntiRegisterProbe-unsigned
+          path: ios-bridge/AntiRegisterProbe-unsigned.ipa
