@@ -24,7 +24,6 @@ jobs:
           gradle-version: 8.9
 
       - name: Unit tests
-        continue-on-error: true
         run: gradle :app:testDebugUnitTest --stacktrace
 
       - name: Build debug APK
