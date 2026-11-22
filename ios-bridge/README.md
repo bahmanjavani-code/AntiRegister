@@ -1,6 +1,14 @@
-# iOS bridge — development only
-This Swift package implements the existing Android Stage 5 frame format. It does not yet connect to a phone or send SMS or carry calls.
-The upstream Android socket is RFCOMM, unavailable to ordinary iOS apps for arbitrary services. Proposed replacement: authenticated encrypted local TCP over Android tethering; no cloud. Preserve existing control envelopes and audio framing.
-Before enabling any telephony or SMS commands, require explicit pairing and authenticated encryption, bind only to the tethering interface, and reject unauthorized peers. Do not log SMS or credentials.
-Cellular downlink and uplink need separate device validation; root and privileged app status do not guarantee audio routing. No firmware modifications are included.
-Run the protocol unit tests with swift test in this directory on a supported Swift host.
+# iOS bridge — foreground connectivity prototype
+
+Only authenticated PING/PONG is enabled. No SMS, calls or cellular audio yet. No root or cloud required for this test.
+
+## Device acceptance
+1. Download debug APK and unsigned IPA from GitHub Actions on ios-bridge. Sign IPA using a supported signing method before installing.
+2. On Poco in Termux, install openssl if missing and run scripts/pair-local.sh using bash. Keep generated files private.
+3. Copy server.p12 and client.pem to local Android storage; transfer client.p12 privately to iPhone Files. Read server-fingerprint.txt. Do not upload credentials to GitHub.
+4. Enable Poco hotspot, connect iPhone. Find router IPv4 under the iPhone Wi-Fi network details.
+5. Open iOS Bridge Probe launcher on Poco, select server.p12 and client.pem, enter that IP and pairing password, start.
+6. Open AntiRegisterProbe on iPhone, enter IP, SHA256 fingerprint and password, import client.p12, tap Test connection.
+7. Expect Authenticated probe passed. Repeat with incorrect fingerprint and expect failure. Stop probe after test.
+
+Next gate: real device connectivity before SMS dispatch or telephony work. Cellular audio routing and background incoming notifications remain unverified. Do not root or flash firmware at this stage.
