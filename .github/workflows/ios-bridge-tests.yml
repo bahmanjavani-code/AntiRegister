@@ -1,0 +1,17 @@
+name: iOS bridge tests
+on:
+  push:
+    branches: [ios-bridge]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  swift-test:
+    runs-on: macos-15
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ios-bridge
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test
