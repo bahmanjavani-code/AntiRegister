@@ -1,0 +1,20 @@
+name: AntiRegisterProbe
+options:
+  deploymentTarget:
+    iOS: "16.0"
+packages:
+  BridgeCore:
+    path: .
+targets:
+  AntiRegisterProbe:
+    type: application
+    platform: iOS
+    sources: [ProbeApp]
+    dependencies:
+      - package: BridgeCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.antiregister.probe
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_NSLocalNetworkUsageDescription: Connect to your paired SIM phone on its local hotspot.
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
