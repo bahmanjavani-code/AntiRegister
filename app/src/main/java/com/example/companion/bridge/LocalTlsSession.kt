@@ -14,6 +14,8 @@ import javax.net.ssl.SSLSocket
  */
 class LocalTlsSession(context: SSLContext, address: InetAddress, port: Int) : Closeable {
     private val listener: SSLServerSocket
+    private val lifecycle = Any()
+    private var activePeer: SSLSocket? = null
     init {
         require(address.isSiteLocalAddress && !address.isAnyLocalAddress && !address.isLoopbackAddress)
         listener = context.serverSocketFactory.createServerSocket(port, 1, address) as SSLServerSocket
@@ -23,6 +25,11 @@ class LocalTlsSession(context: SSLContext, address: InetAddress, port: Int) : Cl
     val localPort: Int get() = listener.localPort
     fun accept(onFrame: (LocalFrame, (LocalFrame) -> Unit) -> Unit) {
         (listener.accept() as SSLSocket).use { peer ->
+            synchronized(lifecycle) {
+                if (listener.isClosed) return
+                activePeer = peer
+            }
+            try {
             peer.soTimeout = 10000
             peer.startHandshake()
             val input = DataInputStream(peer.inputStream)
@@ -32,7 +39,14 @@ class LocalTlsSession(context: SSLContext, address: InetAddress, port: Int) : Cl
                 val frame = LocalWire.read(input)
                 onFrame(frame) { reply -> synchronized(lock) { LocalWire.write(output, reply) } }
             }
+            } finally {
+                synchronized(lifecycle) { if (activePeer === peer) activePeer = null }
+            }
         }
     }
-    override fun close() = listener.close()
+    override fun close() {
+        synchronized(lifecycle) {
+            try { listener.close() } finally { activePeer?.close() }
+        }
+    }
 }
